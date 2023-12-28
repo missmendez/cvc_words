@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CVC Words</title>
+  <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Playpen+Sans">
+  <script src="https://cdn.jsdelivr.net/npm/@tsparticles/confetti@3.0.3/tsparticles.confetti.bundle.min.js"></script>
+  <style>
+    * { 
+      font-family: 'Comic Sans MS', 'Playpen Sans', sans-serif; 
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      /*overflow: hidden;*/
+      margin: 0;
+      padding: 0;
+      image-rendering: pixelated;
+      /* background: url("./images/Background/Gray.png") repeat;
+      background-size: 15vw 15vw;
+      animation: scrolling 250s linear infinite; */
+
+    }
+    /* @keyframes scrolling {
+      from{
+          background-position: 0 0;
+      }
+      to{
+          background-position: -105% -105%;
+      }
+    } */
+
+    main {
+      font-size: 12vh;
+      padding-top: 2vh;
+      /* color: white; */
+      /* -webkit-text-stroke: 0.3vh black; */
+    }
+
+    #questions {
+      height: 65vh;
+      overflow: scroll;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      /* margin: 0 2vh; */
+    }
+    .question {
+      width: 30vw;
+      overflow: scroll;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 1vw;
+      /* padding: 1vw 0;
+      background-color: white; */
+    }
+    .question img {
+      max-height: 40vh;
+      max-width: 30vw;
+      display: block;
+      border-radius: 0.25em;
+      margin: auto;
+    }
+    .question .letters div {
+      display: inline-block;
+    }
+    .letters {
+      padding-top: 1.6vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .letter.empty {
+      padding: 0;
+      width: 1em;
+      height: 1.5em;
+      margin: 0 0.3vw;
+      text-align: center;
+      border: 5px solid rgb(129, 78, 177);
+      border-radius: 0.125em;
+    }
+
+    .letter.empty.dragover {
+      /* border-color: black; */
+      background-color: rgba(234, 212, 255, 1.0);
+    }
+
+    #cards {
+      height: 27vh;
+      overflow: scroll;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-holder {
+      width: 1em;
+      height: 1.5em;
+      margin: 0 2vw;
+    }
+
+    .card {
+      display: inline-block;
+      width: 1em;
+      height: 1.5em;
+      margin: 0 2vw;
+      text-align: center;
+      background-color: rgb(208, 178, 236);
+      border-radius: 0.125em;
+      user-select: none;
+    }
+
+    .hidden {
+      visibility: hidden;
+    }
+
+    .fixed {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    nav {
+      font-size: 1.25vw;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+    }
+
+    nav img {
+      margin-left: auto;
+    }
+
+    nav img:hover {
+      /* transform: translateY(4px); */
+      animation: shiftDown 0.25s step-start;
+    }
+
+    nav img:active {
+      transform: translateY(3px);
+    }
+
+    @keyframes shiftDown {
+      to { transform: translateY(3px); } 
+    }
+
+    #gameOptions {
+      margin-left: 0.61em;
+    }
+
+    input[type="radio"]:checked + label {
+    }
+
+
+  </style>
+</head>
+<body>
+  <nav>
+    <div id="gameOptions">
+      <input type="radio" id="vowelsOnly" name="gameType" checked>
+      <label for="vowelsOnly">Vowels only</label>
+      <input type="radio" id="consonantsOnly" name="gameType">
+      <label for="consonantsOnly">Consonants only</label>
+      <input type="radio" id="both" name="gameType">
+      <label for="both">Both</label>
+    </div>
+      <img src="./images/Buttons/Restart.png" id="restartButton" height="42">
+  </nav>
+  <main>
+    <section id="questions">
+      <div class="question">
+        <div>
+          <img src="./images/Words/can.jpg">
+          <div class="letters">
+            <div class="letter">c</div>
+            <div class="letter empty" data-answer="a">_</div>
+            <div class="letter">n</div>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <div>
+          <img src="./images/Words/car.jpg">
+          <div class="letters">
+            <div class="letter empty" data-answer="c">_</div>
+            <div class="letter">a</div>
+            <div class="letter">r</div>
+          </div>
+        </div>
+      </div>
+      <div class="question">
+        <div>
+          <img src="./images/Words/hit.jpg">
+          <div class="letters">
+            <div class="letter">h</div>
+            <div class="letter">i</div>
+            <div class="letter empty" data-answer="t">_</div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section id="cards">
+      <div class="card-holder">
+        <div class="card">c</div>
+      </div>
+      <div class="card-holder">
+        <div class="card">a</div>
+      </div>
+      <div class="card-holder">
+        <div class="card">t</div>
+      </div>
+    </section>
+  </main>
+
+<script>
+let startingX = 0;
+let startingY = 0;
+let elem = null;
+let height = 0;
+let width = 0;
+let startTime = undefined;
+let locked = false;
+let inTheRightSpot = false;
+let answerX = 0;
+let answerY = 0;
+let answerElem = undefined;
+
+function cardDrag(e) {
+  if (locked) return;
+
+  e.target.onpointermove = slide;
+  e.target.setPointerCapture(e.pointerId);
+  startingX = e.target.getBoundingClientRect().left;
+  startingY = e.target.getBoundingClientRect().top;
+  e.target.style.left = `${startingX}px`;
+  e.target.style.top = `${startingY}px`;
+  height = e.target.getBoundingClientRect().bottom - e.target.getBoundingClientRect().top;
+  width = e.target.getBoundingClientRect().right - e.target.getBoundingClientRect().left;
+  e.target.classList.add("fixed");
+
+  elem = e.target;
+  inTheRightSpot = false;
+}
+
+function slide(e) {
+  let x = e.clientX - width/2;
+  let y = e.clientY - height/2;
+  e.target.style.left = `${x}px`;
+  e.target.style.top = `${y}px`;
+
+  highlightEmptyIfOver(e.clientX, e.clientY);
+}
+
+function lerp(s, e, t) {
+  if (t < 0) t = 0;
+  if (t > 1) t = 1;
+  return s + (e - s) * t;
+}
+
+function approxEqual(x, y) {
+  return Math.abs(x - y) < 0.01;
+}
+
+function slideBack(timeStamp) {
+  if (startTime === undefined) {
+    startTime = timeStamp;
+  }
+  const duration = (timeStamp - startTime) / 1000.0;
+
+  let currentX = parseFloat(elem.style.left);
+  let currentY = parseFloat(elem.style.top);
+
+  let done = approxEqual(currentX, startingX) && approxEqual(currentY, startingY);
+
+  if (done) {
+    elem.classList.remove("fixed");
+    locked = false;
+  } else {
+    let newX = lerp(currentX, startingX, duration * 7);
+    let newY = lerp(currentY, startingY, duration * 7);
+    elem.style.left = `${newX}px`;
+    elem.style.top = `${newY}px`;
+    window.requestAnimationFrame(slideBack);
+  }
+}
+
+function slideToCorrectSpot(timeStamp) {
+  if (startTime === undefined) {
+    startTime = timeStamp;
+  }
+  const duration = (timeStamp - startTime) / 1000.0;
+
+  const BORDER_WIDTH = 5;
+
+  let currentX = parseFloat(elem.style.left);
+  let currentY = parseFloat(elem.style.top);
+
+  let done = approxEqual(currentX, answerX+BORDER_WIDTH) && approxEqual(currentY, answerY+BORDER_WIDTH);
+
+  if (done) {
+    locked = false;
+    elem.classList.add("hidden");
+    answerElem.innerHTML = answerElem.dataset.answer;
+    answerElem.classList.remove("empty");
+  } else {
+    let newX = lerp(currentX, answerX+BORDER_WIDTH, duration * 3);
+    let newY = lerp(currentY, answerY+BORDER_WIDTH, duration * 3);
+    elem.style.left = `${newX}px`;
+    elem.style.top = `${newY}px`;
+    window.requestAnimationFrame(slideToCorrectSpot);
+  }
+}
+
+function cardDragEnd(e) {
+  e.target.onpointermove = null;
+  e.target.releasePointerCapture(e.pointerId);
+  removeEmptyLetterHighlight();
+
+  if (!inTheRightSpot) {
+    locked = true;
+    elem = e.target;
+    startTime = undefined;
+    window.requestAnimationFrame(slideBack);
+  } else {
+    locked = true;
+    elem = e.target;
+    startTime = undefined;
+    window.requestAnimationFrame(slideToCorrectSpot);
+  }
+}
+
+function highlightEmptyIfOver(x, y) {
+  for (const card of document.getElementsByClassName("empty")) {
+    x1 = card.getBoundingClientRect().left;
+    x2 = card.getBoundingClientRect().right;
+    y1 = card.getBoundingClientRect().top;
+    y2 = card.getBoundingClientRect().bottom;
+
+    if (x1 <= x && x <= x2 && y1 <= y && y <= y2) {
+      card.classList.add("dragover");
+
+      if (card.dataset.answer == elem.innerHTML) {
+        inTheRightSpot = true;
+        answerX = x1;
+        answerY = y1;
+        answerElem = card;
+        break;
+      } else {
+        inTheRightSpot = false;
+      }
+    }
+    else {
+      card.classList.remove("dragover");
+      inTheRightSpot = false;
+    }
+  }
+}
+
+function removeEmptyLetterHighlight() {
+  for (const card of document.getElementsByClassName("empty")) {
+    card.classList.remove("dragover");
+  }
+}
+
+function newGame() {
+
+}
+
+for (const card of document.getElementsByClassName("card")) {
+  card.addEventListener("pointerdown", cardDrag);
+  card.addEventListener("pointerup", cardDragEnd);
+}
+
+for (const radioButton of document.querySelectorAll('input[type="radio"]')) {
+  radioButton.addEventListener("change", (e) => {
+    if (this.checked) {
+      newGame(this.id);
+    }
+  });
+}
+
+newGame("vowelsOnly");
+
+</script>
+</body>
+</html>
