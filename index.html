@@ -4,7 +4,7 @@
   <title>CVC Words</title>
   <link rel="stylesheet"
           href="https://fonts.googleapis.com/css?family=Playpen+Sans">
-  <script src="https://cdn.jsdelivr.net/npm/@tsparticles/confetti@3.0.3/tsparticles.confetti.bundle.min.js"></script>
+  <script src="./tsparticles.confetti.bundle.min.js"></script>
   <style>
     * { 
       font-family: 'Comic Sans MS', 'Playpen Sans', sans-serif; 
@@ -228,6 +228,7 @@ let inTheRightSpot = false;
 let answerX = 0;
 let answerY = 0;
 let answerElem = undefined;
+let completed = 0;
 
 function cardDrag(e) {
   if (locked) return;
@@ -288,6 +289,32 @@ function slideBack(timeStamp) {
   }
 }
 
+function playFireworks() {
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { x: 0.25, y: 0.6 },
+    });
+  }, 0);
+
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { x: 0.50, y: 0.6 },
+    });
+  }, 350);
+
+  setTimeout(() => {
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { x: 0.75, y: 0.6 },
+    });
+  }, 700);
+}
+
 function slideToCorrectSpot(timeStamp) {
   if (startTime === undefined) {
     startTime = timeStamp;
@@ -306,6 +333,8 @@ function slideToCorrectSpot(timeStamp) {
     elem.classList.add("hidden");
     answerElem.innerHTML = answerElem.dataset.answer;
     answerElem.classList.remove("empty");
+    completed++;
+    if (completed == 3) playFireworks();
   } else {
     let newX = lerp(currentX, answerX+BORDER_WIDTH, duration * 3);
     let newY = lerp(currentY, answerY+BORDER_WIDTH, duration * 3);
@@ -366,24 +395,204 @@ function removeEmptyLetterHighlight() {
   }
 }
 
-function newGame() {
+function shuffle(array) {
+  let currentIndex = array.length,  randomIndex;
 
+  // While there remain elements to shuffle.
+  while (currentIndex > 0) {
+
+    // Pick a remaining element.
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    // And swap it with the current element.
+    [array[currentIndex], array[randomIndex]] = [
+      array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
 }
 
-for (const card of document.getElementsByClassName("card")) {
-  card.addEventListener("pointerdown", cardDrag);
-  card.addEventListener("pointerup", cardDragEnd);
+function make_word(filename, allowableIndices) {
+  shuffle(allowableIndices);
+
+  return {
+    filename: filename,
+    word: filename.split(".")[0],
+    blankIndex: allowableIndices[0]
+  };
 }
 
-for (const radioButton of document.querySelectorAll('input[type="radio"]')) {
-  radioButton.addEventListener("change", (e) => {
-    if (this.checked) {
-      newGame(this.id);
+function same(word1, word2) {
+  return word1.word[word1.blankIndex] == word2.word[word2.blankIndex];
+}
+
+function createLetters(word) {
+  let res = "";
+
+  for (let i = 0; i < 3; i++) {
+    if (i == word.blankIndex) {
+      res += `<div class="letter empty" data-answer="${word.word[i]}">_</div>\n`;
+    } else {
+      res += `<div class="letter">${word.word[i]}</div>\n`;
+    }
+  }
+
+  return res;
+}
+
+function newGame(gameType) {
+  startingX = 0;
+  startingY = 0;
+  elem = null;
+  height = 0;
+  width = 0;
+  startTime = undefined;
+  locked = false;
+  inTheRightSpot = false;
+  answerX = 0;
+  answerY = 0;
+  answerElem = undefined;
+  completed = 0;
+
+  const pictures = [
+    "bag.jpg",
+    "bed.svg",
+    "boy.jpg",
+    "bus.jpg",
+    "can.jpg",
+    "car.jpg",
+    "cat.jpg",
+    "cup.jpg",
+    "cut.jpg",
+    "dog.jpg",
+    "fan.jpg",
+    "gas.jpg",
+    "hit.jpg",
+    "hot.jpg",
+    "key.jpg",
+    "pay.jpg",
+    "run.jpg",
+    "sad.jpg",
+    "saw.svg",
+    "sit.png",
+    "six.jpg",
+    "sun.jpg",
+    "ten.jpg",
+  ];
+
+  shuffle(pictures);
+
+  let allowableIndices = [];
+
+  if (gameType == "vowelsOnly") {
+    allowableIndices = [1];
+  } else if (gameType == "consonantsOnly") {
+    allowableIndices = [0, 2];
+  } else {
+    allowableIndices = [0, 1, 2];
+  }
+
+  let words = [make_word(pictures[0], allowableIndices)];
+
+  let i = 1;
+
+  while (true) {
+    let word = make_word(pictures[i], allowableIndices);
+    if (same(word, words[0]))
+      i++;
+    else {
+      words.push(word);
+      break;
+    }
+  }
+  i++;
+
+  while (true) {
+    let word = make_word(pictures[i], allowableIndices);
+    if (same(word, words[0]) || same(word, words[1]))
+      i++;
+    else {
+      words.push(word);
+      break;
+    }
+  }
+  
+  let questions = `
+      <div class="question">
+        <div>
+          <img src="./images/Words/${words[0].filename}">
+          <div class="letters">
+            ${createLetters(words[0])}
+          </div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div>
+          <img src="./images/Words/${words[1].filename}">
+          <div class="letters">
+            ${createLetters(words[1])}
+          </div>
+        </div>
+      </div>
+
+      <div class="question">
+        <div>
+          <img src="./images/Words/${words[2].filename}">
+          <div class="letters">
+            ${createLetters(words[2])}
+          </div>
+        </div>
+      </div>
+  `;
+
+  document.getElementById("questions").innerHTML = questions;
+
+  shuffle(words);
+
+  let cards = `
+    <div class="card-holder">
+      <div class="card">${words[0].word[words[0].blankIndex]}</div>
+    </div>
+    <div class="card-holder">
+      <div class="card">${words[1].word[words[1].blankIndex]}</div>
+    </div>
+    <div class="card-holder">
+      <div class="card">${words[2].word[words[2].blankIndex]}</div>
+    </div>
+  `;
+
+  document.getElementById("cards").innerHTML = cards;
+
+  for (const card of document.getElementsByClassName("card")) {
+    card.addEventListener("pointerdown", cardDrag);
+    card.addEventListener("pointerup", cardDragEnd);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", (e) => {
+  for (const radioButton of document.querySelectorAll('input[type="radio"]')) {
+    radioButton.addEventListener("change", (e) => {
+      if (e.target.checked) {
+        newGame(e.target.id);
+      }
+    });
+  }
+
+  document.getElementById("restartButton").addEventListener("click", (e) => {
+    for (const radioButton of document.querySelectorAll('input[type="radio"]')) {
+      if (radioButton.checked) {
+        newGame(radioButton.id);
+        break;
+      }
     }
   });
-}
 
-newGame("vowelsOnly");
+  document.getElementById("vowelsOnly").click();
+  newGame("vowelsOnly");
+});
+
 
 </script>
 </body>
