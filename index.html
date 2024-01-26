@@ -222,20 +222,21 @@
   </main>
 
 <script>
+let startTime = undefined;
+
+let locked = false;
+let inTheRightSpot = false;
+let answerElem = undefined;
+let answerX = 0;
+let answerY = 0;
 let startingX = 0;
 let startingY = 0;
 let elem = null;
 let height = 0;
 let width = 0;
-let startTime = undefined;
-let locked = false;
-let inTheRightSpot = false;
-let answerX = 0;
-let answerY = 0;
-let answerElem = undefined;
 
 function cardDrag(e) {
-  if (locked) {
+  if (locked || (elem != null && elem != e.target)) {
     // get defensive about it
     e.target.onpointermove = null;
     e.target.releasePointerCapture(e.pointerId);
@@ -288,6 +289,7 @@ function slideBack(timeStamp) {
 
   if (done) {
     elem.classList.remove("fixed");
+    elem = null;
     locked = false;
   } else {
     let newX = lerp(currentX, startingX, duration * 7);
@@ -342,6 +344,7 @@ function slideToCorrectSpot(timeStamp) {
     elem.classList.add("hidden");
     answerElem.innerHTML = answerElem.dataset.answer;
     answerElem.classList.remove("empty");
+    elem = null;
     let completed = document.getElementsByClassName("hidden").length;
     if (completed == 3) playFireworks();
   } else {
