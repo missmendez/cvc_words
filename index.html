@@ -235,7 +235,12 @@ let answerY = 0;
 let answerElem = undefined;
 
 function cardDrag(e) {
-  if (locked) return;
+  if (locked) {
+    // get defensive about it
+    e.target.onpointermove = null;
+    e.target.releasePointerCapture(e.pointerId);
+    return;
+  }
 
   e.target.onpointermove = slide;
   e.target.setPointerCapture(e.pointerId);
